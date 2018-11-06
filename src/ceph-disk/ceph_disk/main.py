@@ -2218,6 +2218,7 @@ class PrepareSpace(object):
             setattr(self.args, self.name + '_uuid', str(uuid.uuid4()))
         self.space_symlink = None
         self.space_dmcrypt = None
+        self.wipe_device = False
 
     def set_type(self):
         name = self.name
@@ -2453,10 +2454,9 @@ class PrepareSpace(object):
             ],
         )
 
-        if self.name == 'journal':
-            # Erase journal partition so ceph doesn't attempt to re-use a
-            # journal that was on this disk previously.
-            LOG.debug('Erasing journal partition %s', self.space_symlink)
+        if self.wipe_device:
+            LOG.debug('Erasing partition %s',
+                      self.space_symlink)
             command(
                 [
                     'dd',
@@ -2484,6 +2484,7 @@ class PrepareJournal(PrepareSpace):
             raise Error('journal specified but not allowed by osd backend')
 
         super(PrepareJournal, self).__init__(args)
+        self.wipe_device = True
 
     def wants_space(self):
         return self.wants_journal
@@ -4447,6 +4448,8 @@ def list_format_more_osd_info_plain(dev):
             desc.append('unknown cluster ' + dev['ceph_fsid'])
     if dev.get('whoami'):
         desc.append('osd.%s' % dev['whoami'])
+    if dev.get('uuid'):
+        desc.append('osd uuid %s' % dev['uuid'])
     for name in Space.NAMES:
         if dev.get(name + '_dev'):
             desc.append(name + ' %s' % dev[name + '_dev'])
