@@ -2454,6 +2454,8 @@ class PrepareSpace(object):
             ],
         )
 
+        update_partition(getattr(self.args, self.name), 'prepared')
+
         if self.wipe_device:
             LOG.debug('Erasing partition %s',
                       self.space_symlink)
@@ -2464,8 +2466,6 @@ class PrepareSpace(object):
                     'of=' + self.space_symlink,
                 ],
             )
-
-        update_partition(getattr(self.args, self.name), 'prepared')
 
         LOG.debug('%s is GPT partition %s',
                   self.name.capitalize(),
